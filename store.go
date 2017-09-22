@@ -21,7 +21,9 @@ func (s *CacheStore) CreateTraverser(uuid string) (fsm.Traverser, error) {
 	if _, ok := s.Traversers[uuid]; ok {
 		return nil, errors.New("Traverser with UUID already exists")
 	}
-	traverser := &CachedTraverser{}
+	traverser := &CachedTraverser{
+		Data: make(map[string]interface{}, 0),
+	}
 	traverser.SetUUID(uuid)
 	s.Traversers[uuid] = traverser
 	return traverser, nil

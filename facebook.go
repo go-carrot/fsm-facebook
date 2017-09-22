@@ -76,10 +76,12 @@ func GetFacebookWebhook(store fsm.Store, stateMachine fsm.StateMachine, startSta
 			for _, messagingEvent := range i.MessagingEvents {
 
 				// Get Traverser
+				newTraverser := false
 				traverser, err := store.FetchTraverser(messagingEvent.Sender.ID)
 				if err != nil {
 					traverser, _ = store.CreateTraverser(messagingEvent.Sender.ID)
 					traverser.SetCurrentState(startState)
+					newTraverser = true
 				}
 
 				// Create Emitter
@@ -89,6 +91,9 @@ func GetFacebookWebhook(store fsm.Store, stateMachine fsm.StateMachine, startSta
 
 				// Get Current State
 				currentState := stateMachine[traverser.CurrentState()](emitter, traverser)
+				if newTraverser {
+					currentState.EntryAction()
+				}
 
 				// Transition
 				newState := currentState.Transition(messagingEvent.Message.Text)

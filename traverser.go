@@ -5,7 +5,7 @@ import "errors"
 type CachedTraverser struct {
 	uuid         string
 	currentState string
-	data         map[string]interface{}
+	Data         map[string]interface{}
 }
 
 func (c *CachedTraverser) UUID() string {
@@ -25,18 +25,18 @@ func (c *CachedTraverser) SetCurrentState(newState string) {
 }
 
 func (c *CachedTraverser) Upsert(key string, value interface{}) error {
-	c.data[key] = value
+	c.Data[key] = value
 	return nil
 }
 
 func (c *CachedTraverser) Fetch(key string) (interface{}, error) {
-	if val, ok := c.data[key]; ok {
+	if val, ok := c.Data[key]; ok {
 		return val, nil
 	}
 	return nil, errors.New("Key `" + key + "` is not set")
 }
 
 func (c *CachedTraverser) Delete(key string) error {
-	delete(c.data, key)
+	delete(c.Data, key)
 	return nil
 }
