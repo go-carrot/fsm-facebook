@@ -97,8 +97,10 @@ func GetFacebookWebhook(store fsm.Store, stateMachine fsm.StateMachine, startSta
 
 				// Transition
 				newState := currentState.Transition(messagingEvent.Message.Text)
-				newState.EntryAction()
-				traverser.SetCurrentState(newState.Slug)
+				err = newState.EntryAction()
+				if err == nil {
+					traverser.SetCurrentState(newState.Slug)
+				}
 			}
 		}
 
