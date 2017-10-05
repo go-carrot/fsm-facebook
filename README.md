@@ -5,12 +5,14 @@ FSM CLI is a Facebook Messenger target for [go-carrot/fsm](https://github.com/go
 
 ## Environment Variables
 
-When using this target, you must set three environment variables:
+When using this target, you must set five environment variables:
 
 ```
 PORT=""
 FACEBOOK_VERIFY_TOKEN=""
 FACEBOOK_ACCESS_TOKEN=""
+DYNAMO_DB_TABLE=""
+DYNAMO_DB_REGION=""
 ```
 
 # License

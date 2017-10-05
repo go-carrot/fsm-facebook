@@ -8,15 +8,27 @@ import (
 	"os"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/go-carrot/fsm"
+	"github.com/go-carrot/fsm-dynamo-store"
 	"github.com/julienschmidt/httprouter"
 	"github.com/tylerb/graceful"
 )
 
 func Start(stateMachine fsm.StateMachine, startState string) {
 	// Create Store
-	store := &CacheStore{
-		Traversers: make(map[string]fsm.Traverser, 0),
+	store := &dynamostore.DynamoStore{
+		Network:     "facebook",
+		DynamoTable: os.Getenv("DYNAMO_DB_TABLE"),
+		DynamoSession: dynamodb.New(
+			session.New(
+				&aws.Config{
+					Region: aws.String(os.Getenv("DYNAMO_DB_REGION")),
+				},
+			),
+		),
 	}
 
 	// Build Server
