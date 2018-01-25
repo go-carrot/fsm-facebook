@@ -3,61 +3,19 @@ package fsmfacebook
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"os"
-	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/go-carrot/fsm"
-	"github.com/go-carrot/fsm-dynamo-store"
-	"github.com/julienschmidt/httprouter"
-	"github.com/tylerb/graceful"
 )
 
-func Start(stateMachine fsm.StateMachine, startState string) {
-	// Create Store
-	store := &dynamostore.DynamoStore{
-		Network:     "facebook",
-		DynamoTable: os.Getenv("DYNAMO_DB_TABLE"),
-		DynamoSession: dynamodb.New(
-			session.New(
-				&aws.Config{
-					Region: aws.String(os.Getenv("DYNAMO_DB_REGION")),
-				},
-			),
-		),
-	}
-
-	// Build Server
-	srv := &graceful.Server{
-		Timeout: 10 * time.Second,
-		Server: &http.Server{
-			Addr:    ":" + os.Getenv("PORT"),
-			Handler: buildRouter(store, stateMachine, startState),
-		},
-	}
-	err := srv.ListenAndServe()
-	if err != nil {
-		fmt.Println(err)
-	}
-}
-
-func buildRouter(store fsm.Store, stateMachine fsm.StateMachine, startState string) *httprouter.Router {
-	// Router
-	router := &httprouter.Router{
-		RedirectTrailingSlash:  true,
-		RedirectFixedPath:      true,
-		HandleMethodNotAllowed: true,
-	}
-	router.HandlerFunc(http.MethodGet, "/facebook", FacebookSetupWebhook)
-	router.HandlerFunc(http.MethodPost, "/facebook", GetFacebookWebhook(store, stateMachine, startState))
-	return router
-}
-
-func FacebookSetupWebhook(w http.ResponseWriter, r *http.Request) {
+// GetFacebookSetupWebhook adds support for the Messenger Platform's webhook verification
+// to your webhook. This is required to ensure your webhook is authentic and working.
+//
+//  This must be a GET request, and have the same URL as the POST request.
+//
+// https://developers.facebook.com/docs/messenger-platform/getting-started/webhook-setup
+func GetFacebookSetupWebhook(w http.ResponseWriter, r *http.Request) {
 	queryParams := r.URL.Query()
 	mode := queryParams.Get("hub.mode")
 	challenge := queryParams.Get("hub.challenge")
@@ -71,9 +29,15 @@ func FacebookSetupWebhook(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// GetFacebookWebhook is the webhook that facebook posts to when a message is
+// received from a user.
+//
+// This must be a POST request, and have the same URL as the GET request.
+//
+// https://developers.facebook.com/docs/messenger-platform/getting-started/webhook-setup
 func GetFacebookWebhook(store fsm.Store, stateMachine fsm.StateMachine, startState string) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Get Body
+		// Get body
 		buf := new(bytes.Buffer)
 		buf.ReadFrom(r.Body)
 		body := buf.String()
@@ -87,7 +51,7 @@ func GetFacebookWebhook(store fsm.Store, stateMachine fsm.StateMachine, startSta
 			// Iterate over each messaging event
 			for _, messagingEvent := range i.MessagingEvents {
 
-				// Get Traverser
+				// Get traverser
 				newTraverser := false
 				traverser, err := store.FetchTraverser(messagingEvent.Sender.ID)
 				if err != nil {
@@ -96,12 +60,12 @@ func GetFacebookWebhook(store fsm.Store, stateMachine fsm.StateMachine, startSta
 					newTraverser = true
 				}
 
-				// Create Emitter
+				// Create emitter
 				emitter := &FacebookEmitter{
 					UUID: traverser.UUID(),
 				}
 
-				// Get Current State
+				// Get current state
 				currentState := stateMachine[traverser.CurrentState()](emitter, traverser)
 				if newTraverser {
 					currentState.EntryAction()
@@ -115,7 +79,6 @@ func GetFacebookWebhook(store fsm.Store, stateMachine fsm.StateMachine, startSta
 				}
 			}
 		}
-
 		w.WriteHeader(http.StatusOK)
 	}
 }
