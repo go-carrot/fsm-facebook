@@ -9,7 +9,7 @@ import (
 	"github.com/go-carrot/fsm"
 )
 
-// GetFacebookSetupWebhook adds support for the Messenger Platform's webhook verification
+// FacebookSetupWebhook adds support for the Messenger Platform's webhook verification
 // to your webhook. This is required to ensure your webhook is authentic and working.
 //
 //  This must be a GET request, and have the same URL as the POST request.
@@ -35,7 +35,7 @@ func FacebookSetupWebhook(w http.ResponseWriter, r *http.Request) {
 // This must be a POST request, and have the same URL as the GET request.
 //
 // https://developers.facebook.com/docs/messenger-platform/getting-started/webhook-setup
-func GetFacebookWebhook(store fsm.Store, stateMachine fsm.StateMachine) func(http.ResponseWriter, *http.Request) {
+func GetFacebookWebhook(stateMachine fsm.StateMachine, store fsm.Store) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Get body
 		buf := new(bytes.Buffer)
