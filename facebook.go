@@ -15,7 +15,7 @@ import (
 //  This must be a GET request, and have the same URL as the POST request.
 //
 // https://developers.facebook.com/docs/messenger-platform/getting-started/webhook-setup
-func GetFacebookSetupWebhook(w http.ResponseWriter, r *http.Request) {
+func FacebookSetupWebhook(w http.ResponseWriter, r *http.Request) {
 	queryParams := r.URL.Query()
 	mode := queryParams.Get("hub.mode")
 	challenge := queryParams.Get("hub.challenge")
