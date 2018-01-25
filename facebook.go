@@ -35,7 +35,7 @@ func FacebookSetupWebhook(w http.ResponseWriter, r *http.Request) {
 // This must be a POST request, and have the same URL as the GET request.
 //
 // https://developers.facebook.com/docs/messenger-platform/getting-started/webhook-setup
-func GetFacebookWebhook(store fsm.Store, stateMachine fsm.StateMachine, startState string) func(http.ResponseWriter, *http.Request) {
+func GetFacebookWebhook(store fsm.Store, stateMachine fsm.StateMachine) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Get body
 		buf := new(bytes.Buffer)
@@ -56,7 +56,7 @@ func GetFacebookWebhook(store fsm.Store, stateMachine fsm.StateMachine, startSta
 				traverser, err := store.FetchTraverser(messagingEvent.Sender.ID)
 				if err != nil {
 					traverser, _ = store.CreateTraverser(messagingEvent.Sender.ID)
-					traverser.SetCurrentState(startState)
+					traverser.SetCurrentState("start")
 					newTraverser = true
 				}
 
